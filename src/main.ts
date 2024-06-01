@@ -1,10 +1,12 @@
 import { NestFactory } from '@nestjs/core';
+import { ValidationPipe, VersioningType } from '@nestjs/common';
+// import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { AppModule } from './app.module';
 import {
   FastifyAdapter,
   NestFastifyApplication,
 } from '@nestjs/platform-fastify';
-import { ValidationPipe, VersioningType } from '@nestjs/common';
+import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
@@ -15,6 +17,16 @@ async function bootstrap() {
     type: VersioningType.URI,
   });
   app.enableCors();
+  app.connectMicroservice<MicroserviceOptions>({
+    transport: Transport.RMQ,
+    options: {
+      urls: ['amqp://localhost:15672'],
+      queue: 'email',
+      queueOptions: {
+        durable: false,
+      },
+    },
+  });
 
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
   //   const document = SwaggerModule.createDocument(app, config);
